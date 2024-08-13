@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./App.css";
 
 function App() {
-  const [progess,setProgress] = useState<number>()
+  const [progess, setProgress] = useState<number>(0);
   const [f, setF] = useState<HTMLInputElement>();
   const readAndUpload = () => {
     // console.log(f)
@@ -10,19 +10,19 @@ function App() {
     const theFile = f?.files ? f.files[0] : null;
     fileReader.readAsArrayBuffer(theFile!);
     fileReader.onload = async (ev) => {
-      const CHUNK_SIZE = 5000;
+      const CHUNK_SIZE = 500000;
       const chunkCount =
         ev.target?.result instanceof ArrayBuffer
           ? ev.target.result.byteLength / CHUNK_SIZE
           : 0;
       console.log(chunkCount);
-      const fileName = Math.random() * 100 + theFile?.name!;
+      const fileName = theFile?.name!;
       for (let chunkId = 0; chunkId < chunkCount + 1; chunkId++) {
         const chunk = ev.target?.result?.slice(
           chunkId * CHUNK_SIZE,
           chunkId * CHUNK_SIZE + CHUNK_SIZE
         );
-        await fetch("http://localhost:3001/upload", {
+        await fetch("http://192.168.29.3:3001/upload", {
           method: "POST",
           headers: {
             "content-type": "application/octet-stream",
@@ -30,12 +30,16 @@ function App() {
               chunk instanceof ArrayBuffer ? chunk.byteLength.toString() : "",
             "file-name": fileName,
           },
-          body:chunk
+          body: chunk,
         });
-        setProgress(Math.round(chunkId*100/chunkCount))
+        setProgress(Math.round((chunkId * 100) / chunkCount));
+      }
+      if(progess >= 100){
+        await fetch("http://192.168.29.3:3001/complete",{
+          method:"GET"
+        })
       }
     };
-    
   };
 
   return (
@@ -51,10 +55,75 @@ function App() {
           id="f"
         />
         <button onClick={readAndUpload}>Read & Upload</button>
-        <div>Progress : {progess}%</div>
+        <div>Progress : {progess >= 100 ? 100 : progess}%</div>
       </div>
+      {/* <Pagination no_pages={10} active_page={1} limit={5} /> */}
     </>
   );
 }
 
 export default App;
+
+// const Pagination = ({
+//   no_pages,
+//   active_page,
+//   limit,
+// }: {
+//   no_pages: number;
+//   active_page:number
+//   limit:number
+// }) => {
+//   const [activePg, setActivePg] = useState(active_page);
+
+//   const goBack = () => {
+//     setActivePg((prev) => Math.max(prev - 1, 1));
+//   };
+
+//   const goForward = () => {
+//     setActivePg((prev) => Math.min(prev + 1, no_pages));
+//   };
+
+//   // Calculate the start and end of the page range
+//   let start = Math.max(0, activePg - Math.ceil(limit / 2));
+//   let end = start + limit;
+
+//   // Adjust start if end exceeds the total number of pages
+//   if (end > no_pages) {
+//     end = no_pages;
+//     start = Math.max(0, end - limit);
+//   }
+
+//   const displayedPages = [...Array(no_pages).keys()].slice(start, end);
+
+//   return (
+//     <div style={{ display: "flex", gap: "10px", padding: "10px" }}>
+//       <button onClick={goBack} disabled={activePg === 1}>
+//         {"<<"}
+//       </button>
+//       {displayedPages.map((pageNum) => (
+//         <div
+//           key={pageNum}
+//           onClick={() => {
+//             setActivePg(pageNum + 1);
+//           }}
+//           style={{
+//             fontSize: "20px",
+//             cursor: "pointer",
+//             background: activePg === pageNum + 1 ? "green" : "gray",
+//             width: "40px",
+//             height: "40px",
+//             borderRadius: "20px",
+//             display: "flex",
+//             justifyContent: "center",
+//             alignItems: "center",
+//           }}
+//         >
+//           {pageNum + 1}
+//         </div>
+//       ))}
+//       <button onClick={goForward} disabled={activePg === no_pages}>
+//         {">"}
+//       </button>
+//     </div>
+//   );
+// };
