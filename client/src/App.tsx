@@ -1,11 +1,26 @@
 import { useState } from "react";
 import "./App.css";
+import { useQuery } from "@tanstack/react-query";
 
 function App() {
+  // const info = useQuery({ queryKey:["getCall"] , queryFn:getData})
+  // // console.log(info.fetchStatus , info.isSuccess , info.status)
+  // if(info.status === "success"){
+  //   console.log(info.data.data[0])
+  // }else{
+  //   console.log("pending")
+  // }
+  // async function getData() {
+  //   const res = await fetch("https://reqres.in/api/users?page=2");
+  //   const data = res.json();
+
+  //   return data;
+  // }
+  // tanstack example
+
   const [progess, setProgress] = useState<number>(0);
   const [f, setF] = useState<HTMLInputElement>();
   const readAndUpload = () => {
-    // console.log(f)
     const fileReader = new FileReader();
     const theFile = f?.files ? f.files[0] : null;
     fileReader.readAsArrayBuffer(theFile!);
@@ -34,13 +49,14 @@ function App() {
         });
         setProgress(Math.round((chunkId * 100) / chunkCount));
       }
-      if(progess >= 100){
-        await fetch("http://192.168.29.3:3001/complete",{
-          method:"GET"
-        })
+      if (progess >= 100) {
+        await fetch("http://192.168.29.3:3001/complete", {
+          method: "GET",
+        });
       }
     };
   };
+
 
   return (
     <>
